@@ -1,3 +1,6 @@
 {
-  "dotnet.defaultSolution": "AwsInspectorPoc.sln"
+  "dotnet.defaultSolution": "AwsInspectorPoc.sln",
+  "cSpell.words": [
+    "Paginators"
+  ]
 }
