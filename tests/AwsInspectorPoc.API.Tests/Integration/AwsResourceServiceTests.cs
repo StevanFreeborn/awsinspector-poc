@@ -1,6 +1,6 @@
 namespace AwsInspectorPoc.API.Tests.Integration;
 
-public class AwsResourceServiceTests : IClassFixture<TestConfiguration>
+public sealed class AwsResourceServiceTests : IClassFixture<TestConfiguration>
 {
   private readonly AwsResourceService _sut;
 
@@ -13,7 +13,9 @@ public class AwsResourceServiceTests : IClassFixture<TestConfiguration>
       throw new InvalidOperationException("AWS options are not configured properly.");
     }
 
-    _sut = new AwsResourceService(awsOptions);
+    var mockOptions = new Mock<IOptionsMonitor<AwsOptions>>();
+    mockOptions.Setup(m => m.CurrentValue).Returns(awsOptions);
+    _sut = new AwsResourceService(mockOptions.Object);
   }
 
   [Fact]
@@ -24,7 +26,7 @@ public class AwsResourceServiceTests : IClassFixture<TestConfiguration>
 
     await foreach (var resource in resources)
     {
-      Assert.False(string.IsNullOrWhiteSpace(resource));
+      Assert.False(string.IsNullOrWhiteSpace(resource.Arn));
       count++;
     }
 

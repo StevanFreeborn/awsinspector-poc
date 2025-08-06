@@ -25,6 +25,9 @@ insert_final_newline = false
 
 # diagnostics
 dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA2201.severity = none
+dotnet_diagnostic.CA1031.severity = none
 
 # Organize usings
 dotnet_separate_import_directive_groups = true
