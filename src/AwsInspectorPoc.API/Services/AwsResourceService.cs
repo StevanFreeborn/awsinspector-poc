@@ -5,37 +5,35 @@ internal interface IAwsResourceService
   IAsyncEnumerable<AwsResource> GetResourcesAsync();
 }
 
-internal sealed class AwsResourceService : IAwsResourceService, IDisposable
+internal sealed class AwsResourceService : IAwsResourceService
 {
   private readonly IOptionsMonitor<AwsOptions> _awsOptions;
-  private readonly AmazonResourceExplorer2Client _resourceClient;
+  private readonly BasicAWSCredentials _credentials;
 
   public AwsResourceService(IOptionsMonitor<AwsOptions> awsOptions)
   {
     _awsOptions = awsOptions;
 
-    var credentials = new BasicAWSCredentials(_awsOptions.CurrentValue.AccessKey, _awsOptions.CurrentValue.SecretKey);
-    var regionEndpoint = RegionEndpoint.GetBySystemName(_awsOptions.CurrentValue.Region);
-    _resourceClient = new AmazonResourceExplorer2Client(credentials, regionEndpoint);
+    _credentials = new BasicAWSCredentials(_awsOptions.CurrentValue.AccessKey, _awsOptions.CurrentValue.SecretKey);
   }
 
   public async IAsyncEnumerable<AwsResource> GetResourcesAsync()
   {
-    var request = new ListResourcesRequest() { ViewArn = _awsOptions.CurrentValue.ViewArn };
-    var paginator = _resourceClient.Paginators.ListResources(request);
-
-    await foreach (var resource in paginator.Resources)
+    foreach (var region in _awsOptions.CurrentValue.Regions)
     {
-      yield return new AwsResource
-      {
-        Arn = resource.Arn,
-        Type = resource.ResourceType,
-      };
-    }
-  }
+      var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+      using var resourceClient = new AmazonResourceExplorer2Client(_credentials, regionEndpoint);
+      var request = new ListResourcesRequest();
+      var paginator = resourceClient.Paginators.ListResources(request);
 
-  public void Dispose()
-  {
-    _resourceClient?.Dispose();
+      await foreach (var resource in paginator.Resources)
+      {
+        yield return new AwsResource
+        {
+          Arn = resource.Arn,
+          Type = resource.ResourceType,
+        };
+      }
+    }
   }
 }

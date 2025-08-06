@@ -2,6 +2,7 @@ namespace AwsInspectorPoc.API.Options;
 
 internal sealed class ResourceMonitorOptions
 {
+  public bool Enabled { get; init; }
   public TimeSpan PollingInterval { get; init; } = TimeSpan.FromHours(1);
 }
 

@@ -45,6 +45,12 @@ internal sealed class ResourceMonitor(
 
   private async Task CreateOrUpdateResourcesAsync()
   {
+    if (_options.CurrentValue.Enabled is false)
+    {
+      _logger.LogInformation("Resource Monitor is disabled, skipping processing.");
+      return;
+    }
+
     _logger.LogInformation("Processing resources...");
     var startTimeStamp = _timeProvider.GetTimestamp();
 

@@ -15,6 +15,7 @@ public sealed class AwsResourceServiceTests : IClassFixture<TestConfiguration>
 
     var mockOptions = new Mock<IOptionsMonitor<AwsOptions>>();
     mockOptions.Setup(m => m.CurrentValue).Returns(awsOptions);
+
     _sut = new AwsResourceService(mockOptions.Object);
   }
 

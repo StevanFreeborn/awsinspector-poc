@@ -2,6 +2,7 @@ namespace AwsInspectorPoc.API.Services;
 
 internal interface IOnspringService
 {
+  Task AddOrUpdateFindingAsync(int onspringResourceRecordId, AwsFinding finding);
   Task AddOrUpdateResourceAsync(AwsResource resource);
 }
 
@@ -17,6 +18,15 @@ internal sealed class OnspringService : IOnspringService, IDisposable
     _httpClient = httpClientFactory.CreateClient();
     _httpClient.BaseAddress = new Uri(_options.CurrentValue.BaseUrl);
     _onspringClient = new OnspringClient(_options.CurrentValue.ApiKey, _httpClient);
+  }
+
+  public Task AddOrUpdateFindingAsync(int onspringResourceRecordId, AwsFinding finding)
+  {
+    // TODO: We should check if we can find a record in the vulnerabilities app
+    // that has the same Arn.
+    // if we can find it we will save record with that id
+    // if we cannot find it we will save record without id
+    throw new NotImplementedException();
   }
 
   public async Task AddOrUpdateResourceAsync(AwsResource resource)
