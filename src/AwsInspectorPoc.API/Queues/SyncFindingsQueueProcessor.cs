@@ -57,8 +57,9 @@ internal sealed class SyncFindingsQueueProcessor(
       }
     );
 
-    await _onspringService.UpdateResourceLastCompletedSyncAsync(item.ResourceArn);
     var elapsedTime = _timeProvider.GetElapsedTime(startTimeStamp);
     _logger.LogInformation("Finished processing {Count} findings for resource {ResourceArn} in {ElapsedTime} ms", count, item.ResourceArn, elapsedTime.TotalMilliseconds);
+
+    await _onspringService.UpdateResourceLastCompletedSyncAsync(item.ResourceArn);
   }
 }
