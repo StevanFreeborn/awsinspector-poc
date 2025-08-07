@@ -1,5 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddTelemetry();
+
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpClient();
 
