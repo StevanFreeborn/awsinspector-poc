@@ -7,7 +7,7 @@ COPY src/AwsInspectorPoc.API/*.csproj src/AwsInspectorPoc.API/
 
 COPY tests/AwsInspectorPoc.API.Tests/*.csproj tests/AwsInspectorPoc.API.Tests/
 
-RUN dotnet restore AwsInspectorPoc.API.sln
+RUN dotnet restore AwsInspectorPoc.sln
 
 COPY . .
 
