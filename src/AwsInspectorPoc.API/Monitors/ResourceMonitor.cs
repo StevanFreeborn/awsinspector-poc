@@ -53,11 +53,14 @@ internal sealed class ResourceMonitor(
 
     _logger.LogInformation("Processing resources...");
     var startTimeStamp = _timeProvider.GetTimestamp();
+    var count = 0;
 
     await Parallel.ForEachAsync(
       _awsResourceService.GetResourcesAsync(),
       async (resource, _) =>
       {
+        Interlocked.Increment(ref count);
+
         try
         {
           await _onspringService.AddOrUpdateResourceAsync(resource);
@@ -71,6 +74,6 @@ internal sealed class ResourceMonitor(
     );
 
     var elapsedTime = _timeProvider.GetElapsedTime(startTimeStamp);
-    _logger.LogInformation("Finished processing resources in {ElapsedTime}", elapsedTime.ToString("c"));
+    _logger.LogInformation("Finished processing resources in {ElapsedTime} ms", elapsedTime.TotalMilliseconds);
   }
 }
