@@ -18,6 +18,7 @@ builder.Services.AddHostedService<SyncFindingsQueueProcessor>();
 
 builder.Services.AddOpenApi();
 
+builder.Services.ConfigureOptions<BasicAuthOptionsSetup>();
 builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthentication>(
     BasicAuthentication.SchemeName,
@@ -47,7 +48,7 @@ app
   {
     if (request.IsValid() is false)
     {
-      return Results.BadRequest($"Invalid request: {nameof(request.ResourceArn)} should not be empty and {nameof(request.OnspringResourceRecordId)} should be greater than 0.");
+      return Results.BadRequest($"Invalid request: {nameof(request.ResourceArn)} should not be empty.");
     }
 
     await queue.EnqueueAsync(SyncFindingsQueueItem.From(request));
@@ -56,20 +57,20 @@ app
   })
   .RequireAuthorization(BasicAuthentication.SchemeName);
 
-app.UseHttpsRedirection();
+if (app.Environment.IsProduction())
+{
+  app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.Run();
 
-record SyncFindingsRequest(
-  string ResourceArn,
-  int OnspringResourceRecordId
-)
+record SyncFindingsRequest(string ResourceArn)
 {
   public bool IsValid()
   {
-    return string.IsNullOrWhiteSpace(ResourceArn) is false && OnspringResourceRecordId > 0;
+    return string.IsNullOrWhiteSpace(ResourceArn) is false;
   }
 }

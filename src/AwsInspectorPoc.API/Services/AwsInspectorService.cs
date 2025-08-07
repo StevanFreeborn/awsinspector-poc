@@ -46,7 +46,20 @@ internal sealed class AwsInspectorService : IAwsInspectorService
       {
         yield return new AwsFinding
         {
-          Description = finding.Description
+          Arn = finding.FindingArn,
+          Title = finding.Title,
+          Description = finding.Description,
+          FirstObservedAt = finding.FirstObservedAt,
+          LastObservedAt = finding.LastObservedAt,
+          Severity = finding.Severity,
+          Status = finding.Status,
+          Type = finding.Type,
+          ExploitAvailable = finding.ExploitAvailable,
+          FixAvailable = finding.FixAvailable,
+          InspectorScore = finding.InspectorScore,
+          UpdatedAt = finding.UpdatedAt,
+          RemediationRecommendation = finding.Remediation.Recommendation.Text,
+          RemediationRecommendationUrl = finding.Remediation.Recommendation.Url
         };
       }
     }

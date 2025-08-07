@@ -3,12 +3,14 @@ namespace AwsInspectorPoc.API.Queues;
 internal sealed class SyncFindingsQueueProcessor(
   ISyncFindingsQueue queue,
   IAwsInspectorService awsInspectorService,
-  IOnspringService onspringService
+  IOnspringService onspringService,
+  ILogger<SyncFindingsQueueProcessor> logger
 ) : BackgroundService
 {
   private readonly ISyncFindingsQueue _queue = queue;
   private readonly IAwsInspectorService _awsInspectorService = awsInspectorService;
   private readonly IOnspringService _onspringService = onspringService;
+  private readonly ILogger<SyncFindingsQueueProcessor> _logger = logger;
 
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
@@ -16,7 +18,14 @@ internal sealed class SyncFindingsQueueProcessor(
     {
       await foreach (var item in _queue.DequeueAllAsync(stoppingToken))
       {
-        await ProcessQueueItemAsync(item, stoppingToken);
+        try
+        {
+          await ProcessQueueItemAsync(item, stoppingToken);
+        }
+        catch (Exception ex)
+        {
+          _logger.LogError(ex, "Error processing queue item for resource {ResourceArn}", item.ResourceArn);
+        }
       }
     }
   }
@@ -26,6 +35,9 @@ internal sealed class SyncFindingsQueueProcessor(
     await Parallel.ForEachAsync(
       _awsInspectorService.GetFindingsForResourceAsync(item.ResourceArn),
       cancellationToken,
-      async (finding, _) => await _onspringService.AddOrUpdateFindingAsync(item.OnspringRecordId, finding));
+      async (finding, _) => await _onspringService.AddOrUpdateFindingAsync(item.ResourceArn, finding)
+    );
+
+    await _onspringService.UpdateResourceLastCompletedSyncAsync(item.ResourceArn);
   }
 }

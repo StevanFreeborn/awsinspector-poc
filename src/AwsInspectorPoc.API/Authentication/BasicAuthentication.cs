@@ -59,8 +59,8 @@ class BasicAuthentication : AuthenticationHandler<AuthenticationSchemeOptions>
     var password = credentials[1];
 
     if (
-      username == _basicOptions.CurrentValue.Username &&
-      password == _basicOptions.CurrentValue.Password
+      username != _basicOptions.CurrentValue.Username ||
+      password != _basicOptions.CurrentValue.Password
     )
     {
       return Task.FromResult(AuthenticateResult.Fail("Invalid username or password"));
