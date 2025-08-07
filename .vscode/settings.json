@@ -1,6 +1,9 @@
 {
   "dotnet.defaultSolution": "AwsInspectorPoc.sln",
   "cSpell.words": [
-    "Paginators"
+    "awsinspector",
+    "DOCKERHUB",
+    "Paginators",
+    "stevanfreeborn"
   ]
 }

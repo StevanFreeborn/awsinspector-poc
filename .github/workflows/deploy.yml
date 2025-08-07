@@ -1,0 +1,105 @@
+name: Deploy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+      - '.gitignore'
+      - '**/*/LICENSE.md'
+      - '**/*/README.md'
+      - '**/*/Dockerfile'
+jobs:
+  build:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Create version tag
+        id: version
+        run: echo "version=$(date +%Y.%m.%d.%H%M%S)" >> $GITHUB_OUTPUT
+      - name: Build and push image
+        run: |
+          TAG=${{ secrets.DOCKERHUB_USERNAME }}/awsinspector-poc.stevanfreeborn.com:${{ steps.version.outputs.version }}
+          docker build -t $TAG .
+          docker push $TAG
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Run image on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd awsinspector-poc.stevanfreeborn.com
+
+            echo 'AwsOptions__AccessKey=${{ secrets.AWS_OPTIONS_ACCESS_KEY }}' >> .env
+            echo 'AwsOptions__Regions__0=${{ secrets.AWS_OPTIONS_REGION_0 }}' >> .env
+            echo 'AwsOptions__SecretKey=${{ secrets.AWS_OPTIONS_SECRET_KEY }}' >> .env
+            echo 'BasicAuthOptions__Password=${{ secrets.BASIC_AUTH_OPTIONS_PASSWORD }}' >> .env
+            echo 'BasicAuthOptions__Username=${{ secrets.BASIC_AUTH_OPTIONS_USERNAME }}' >> .env
+            echo 'Logging__LogLevel__Default=${{ vars.LOGGING_LOGLEVEL_DEFAULT }}' >> .env
+            echo 'Logging__LogLevel__Microsoft.AspNetCore=${{ vars.LOGGING_LOG_LEVEL_MICROSOFT }}' >> .env
+            echo 'OnspringOptions__ApiKey=${{ secrets.ONSPRING_OPTIONS_API_KEY }}' >> .env
+            echo 'OnspringOptions__BaseUrl=${{ vars.ONSPRING_OPTIONS_BASE_URL }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationAppId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_APP_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationAwsPlatformListValueId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_AWS_PLATFORM_LIST_VALUE_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationAwsResourceTypeFieldId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_AWS_RESOURCE_TYPE_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationLastCompletedSyncFieldId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_LAST_COMPLETED_SYNC_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationNameFieldId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_NAME_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationOperationalStatusListValueId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_OPERATIONAL_STATUS_LIST_VALUE_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationPlatformFieldId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_PLATFORM_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__BusinessApplicationStatusFieldId=${{ vars.ONSPRING_OPTIONS_BUSINESS_APPLICATION_STATUS_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAppId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_APP_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsArnFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_ARN_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsDescriptionFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_DESCRIPTION_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsExploitAvailableFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_EXPLOIT_AVAILABLE_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsFirstObservedAtFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_FIRST_OBSERVED_AT_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsFixAvailableFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_FIX_AVAILABLE_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsInspectorScoreFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_INSPECTOR_SCORE_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsLastObservedAtFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_LAST_OBSERVED_AT_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsRemediationRecommendationFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_REMEDIATION_RECOMMENDATION_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsRemediationRecommendationUrlFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_REMEDIATION_RECOMMENDATION_URL_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsSeverityFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_SEVERITY_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsStatusFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_STATUS_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsTypeFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_TYPE_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesAwsUpdatedAtFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_AWS_UPDATED_AT_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesBusinessApplicationsFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_BUSINESS_APPLICATIONS_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesNameFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_NAME_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesScannerSourceAwsInspectorListValueId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_SCANNER_SOURCE_AWS_INSPECTOR_LIST_VALUE_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesScannerSourceFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_SCANNER_SOURCE_FIELD_ID }}' >> .env
+            echo 'OnspringOptions__VulnerabilitiesUniqueIdFieldId=${{ vars.ONSPRING_OPTIONS_VULNERABILITIES_UNIQUE_ID_FIELD_ID }}' >> .env
+            echo 'ResourceMonitorOptions__Enabled=${{ vars.RESOURCE_MONITOR_OPTIONS_ENABLED }}' >> .env
+            echo 'ResourceMonitorOptions__PollingInterval=${{ vars.RESOURCE_MONITOR_OPTIONS_POLLING_INTERVAL }}' >> .env
+            echo 'SeqOptions__ApiKey=${{ secrets.SEQ_OPTIONS_API_KEY }}' >> .env
+            echo 'SeqOptions__ApiKeyHeader=${{ vars.SEQ_OPTIONS_API_KEY_HEADER }}' >> .env
+            echo 'SeqOptions__ServerUrl=${{ vars.SEQ_OPTIONS_SERVER_URL }}' >> .env
+
+            docker stop awsinspector-poc.stevanfreeborn.com
+            docker rm awsinspector-poc.stevanfreeborn.com
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/awsinspector-poc.stevanfreeborn.com:${{ needs.build.outputs.version }}
+            docker run \
+              --name awsinspector-poc.stevanfreeborn.com  \
+              -p 6565:8080 \
+              --restart always \
+              --env-file .env \
+              --network seq-network \
+              -d \
+              ${{ secrets.DOCKERHUB_USERNAME }}/awsinspector-poc.stevanfreeborn.com:${{ needs.build.outputs.version }}
+            
+            rm .env
