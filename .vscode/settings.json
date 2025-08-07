@@ -1,6 +1,7 @@
 {
   "dotnet.defaultSolution": "AwsInspectorPoc.sln",
   "cSpell.words": [
+    "aspnet",
     "awsinspector",
     "DOCKERHUB",
     "Paginators",
